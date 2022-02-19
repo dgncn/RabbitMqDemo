@@ -27,20 +27,16 @@ namespace SenderApi.Services
             connectionFactory.Password = "guest";
             connection =  connectionFactory.CreateConnection();
             _channel = connection.CreateModel();
-            _channel.QueueDeclare(queue:"queue1",
-                                  durable:true,
-                                  exclusive:false,
-                                  autoDelete:false,
-                                  arguments:null);
-
+            _channel.ExchangeDeclare(exchange:"my-direct-exchange",type:ExchangeType.Direct);
+            //direct exhange tipinde queuelar routing key üstünden exchange'i dinler
 
         }
 
         public bool Enqueue(string message)
         {
             var body = Encoding.UTF8.GetBytes("server processed: "+ message);
-            _channel.BasicPublish(exchange:"",
-                routingKey:"queue1",basicProperties:null,body:body);
+            _channel.BasicPublish(exchange:"my-direct-exchange",
+                routingKey:"directexchange.demoroutingkey",basicProperties:null,body:body);
             Console.WriteLine(" [x] Published {0} to RabbitMQ", message);
             return true;
         }

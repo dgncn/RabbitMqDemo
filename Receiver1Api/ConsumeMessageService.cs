@@ -20,11 +20,17 @@ namespace Receiver1Api
             factory.Password = "guest";
             IConnection conn = factory.CreateConnection();
             IModel channel = conn.CreateModel();
-            channel.QueueDeclare(queue: "queue1",
+
+            channel.ExchangeDeclare("my-direct-exchange", ExchangeType.Direct);
+
+            
+            channel.QueueDeclare(queue: "my-queue-1-for-mydirectexchange",
                                     durable: true,
                                     exclusive: false,
                                     autoDelete: false,
                                     arguments: null);
+
+            channel.QueueBind("my-queue-1-for-mydirectexchange", "my-direct-exchange", "directexchange.demoroutingkey");
 
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (model, ea) =>
@@ -33,7 +39,7 @@ namespace Receiver1Api
                 var message = Encoding.UTF8.GetString(body);
                 Console.WriteLine(" [x] Received from Rabbit: {0}", message);
             };
-            channel.BasicConsume(queue: "queue1",
+            channel.BasicConsume(queue: "my-queue-1-for-mydirectexchange",
                                     autoAck: true,
                                     consumer: consumer);
             return Task.CompletedTask;
